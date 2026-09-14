@@ -1,1 +1,23 @@
-{"name":"cami","version":"1.0.0","type":"module","scripts":{"dev":"vite","build:camera":"VITE_APP_ROLE=camera vite build --outDir dist-camera","build:viewer":"VITE_APP_ROLE=viewer vite build --outDir dist-viewer"},"dependencies":{"react":"^18.3.1","react-dom":"^18.3.1","peerjs":"^1.5.3","trystero":"^0.20.0"},"devDependencies":{"@capacitor/android":"^6.1.0","@capacitor/cli":"^6.1.0","@capacitor/core":"^6.1.0","@vitejs/plugin-react":"^4.3.0","vite":"^5.2.0"}}
+{
+  "name": "cami",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build:camera": "VITE_APP_ROLE=camera vite build --outDir dist-camera",
+    "build:viewer": "VITE_APP_ROLE=viewer vite build --outDir dist-viewer",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "peerjs": "^1.5.3",
+    "trystero": "^0.20.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite": "^5.2.0",
+    "@capacitor/cli": "^6.1.0",
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/core": "^6.1.0"
+  }
+}
