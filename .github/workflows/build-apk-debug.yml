@@ -1,0 +1,26 @@
+name: Build Cami APK Debug
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        role: [camera, viewer]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: |
+          if [ "${{ matrix.role }}" = "camera" ]; then npm run build:camera; cp capacitor.config.camera.json capacitor.config.json; else npm run build:viewer; cp capacitor.config.viewer.json capacitor.config.json; fi
+      - run: npx cap add android || true && npx cap sync android && chmod +x android/gradlew
+      - working-directory: android
+        run:./gradlew assembleDebug --no-daemon
+      - run: mv android/app/build/outputs/apk/debug/app-debug.apk cami-${{ matrix.role }}-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cami-${{ matrix.role }}-apk-debug
+          path: cami-${{ matrix.role }}-debug.apk
