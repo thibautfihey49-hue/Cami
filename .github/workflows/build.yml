@@ -34,7 +34,7 @@ jobs:
       - name: 📦 Installer dépendances
         run: npm ci
 
-      - name: 🏗️ Build Vite + Initialiser Capacitor — ${{ matrix.role }}
+      - name: 🏗️ Build Vite + Capacitor — ${{ matrix.role }}
         run: |
           if [ "${{ matrix.role }}" = "camera" ]; then
             npm run build:camera
@@ -43,12 +43,9 @@ jobs:
             npm run build:viewer
             cp capacitor.config.viewer.json capacitor.config.json
           fi
-          
-          # ✅ Initialisation complète de Capacitor
+          rm -rf ./android
           npx cap add android
           npx cap sync android
-          
-          # ✅ Corriger les permissions du script gradle
           chmod +x android/gradlew
 
       - name: 📱 Compiler APK
