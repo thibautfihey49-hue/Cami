@@ -32,9 +32,9 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: 📦 Installer dépendances
-        run: npm install
+        run: npm ci
 
-      - name: 🏗️ Build Vite — ${{ matrix.role }}
+      - name: 🏗️ Build Vite + Initialiser Capacitor — ${{ matrix.role }}
         run: |
           if [ "${{ matrix.role }}" = "camera" ]; then
             npm run build:camera
@@ -43,12 +43,17 @@ jobs:
             npm run build:viewer
             cp capacitor.config.viewer.json capacitor.config.json
           fi
-          npx cap add android 2>/dev/null || true
+          
+          # ✅ Initialisation complète de Capacitor
+          npx cap add android
           npx cap sync android
+          
+          # ✅ Corriger les permissions du script gradle
+          chmod +x android/gradlew
 
       - name: 📱 Compiler APK
         working-directory: android
-        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: 📤 Renommer l'APK
         run: mv android/app/build/outputs/apk/debug/app-debug.apk cami-${{ matrix.role }}-debug.apk
