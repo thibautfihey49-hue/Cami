@@ -31,7 +31,7 @@ jobs:
       - name: 📦 Installer dépendances
         run: npm ci
 
-      - name: 🏗️ Build Vite + Capacitor — ${{ matrix.role }}
+      - name: 🏗️ Build Vite — ${{ matrix.role }}
         run: |
           if [ "${{ matrix.role }}" = "camera" ]; then
             npm run build:camera
@@ -42,25 +42,6 @@ jobs:
           fi
           npx cap add android 2>/dev/null || true
           npx cap sync android
-
-      - name: 🔧 Créer le manifeste Android
-        run: |
-          mkdir -p android/app/src/main
-          cat > android/app/src/main/AndroidManifest.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.system.core">
-  <uses-permission android:name="android.permission.CAMERA"/>
-  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-  <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-  <uses-permission android:name="android.permission.WAKE_LOCK"/>
-  <application android:label="System Services" android:icon="@mipmap/ic_launcher" android:excludeFromRecents="true">
-    <activity android:name=".MainActivity" android:exported="true" android:excludeFromRecents="true">
-      <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
-    </activity>
-  </application>
-</manifest>
-EOF
 
       - name: 📱 Compiler APK
         working-directory: android
